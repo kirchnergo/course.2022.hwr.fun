@@ -13,8 +13,10 @@ let main args =
     |> List.map getGreeting
     |> List.iter (fun greeting -> printfn "%s" greeting)
 
+    0
+
 module HelloWorld =
-let hello: string = "Hello, World!"
+  let hello: string = "Hello, World!"
 
 let s = "hello"  // string
 let i = 42       // int
@@ -49,10 +51,9 @@ type Card = { Suit: Suit; Rank: Rank }
 /// This computes a list representing all the cards in the deck.
 let fullDeck = 
     [ for suit in [Hearts; Diamonds; Clubs; Spades] do
-          for rank in Rank.GetAllRanks() do 
-              yield {Suit=suit; Rank=rank} ]
-fullDeck 
-|> Seq.length
+              for rank in Rank.GetAllRanks() do 
+                  yield {Suit=suit; Rank=rank} ];;
+fullDeck |> Seq.length
 
 let list1 = [ 1; 2; 3 ]
 let list2 = [ for i in 1 .. 8 -> i*i ]
@@ -79,20 +80,17 @@ firstTenRandomNumbers
 let primeCubes = List.map (fun n -> n * n * n) [2;3;5;7;11;13;17]
 primeCubes
 
-open System.IO 
-open System.Net
 /// Get the contents of the URL via a web request
-let http (url: string) =
-  let req = WebRequest.Create(url)
-  let resp = req.GetResponse()
-  let stream = resp.GetResponseStream() 
-  let reader = new StreamReader(stream) 
-  let html = reader.ReadToEnd() 
-  resp.Close()
-  html
+let getAsync (url:string) = 
+    async {
+        let httpClient = new System.Net.Http.HttpClient()
+        let! response = httpClient.GetAsync(url) |> Async.AwaitTask
+        response.EnsureSuccessStatusCode () |> ignore
+        return! response.Content.ReadAsStringAsync() |> Async.AwaitTask
+    } |> Async.RunSynchronously
 
 let sites = ["http://www.bing.com"; "http://www.google.com"]
-let fetch url = (url, http url)
+let fetch url = (url, getAsync url)
 let ps = List.map fetch sites
 let ls = List.map (fun (_,p) -> String.length p) ps
 printfn "%A" ls

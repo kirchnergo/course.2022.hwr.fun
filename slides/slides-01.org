@@ -134,7 +134,7 @@ CLOSED: [2022-03-03 Thu 21:10]
 ** DONE Benötigte Software
 CLOSED: [2022-03-03 Thu 21:10]
 
-- [[https://dotnet.microsoft.com/download][.Net Core SDK 5.0]]
+- [[https://dotnet.microsoft.com/download][.Net Core SDK 6.0]]
 - [[https://git-scm.com/][git]]
 - [[https://code.visualstudio.com/][Visual Studio Code]]
   - [[http://ionide.io/][ionide.io]]
@@ -346,7 +346,7 @@ printfn "%A, %A %A" t1 t2 t3
 ** DONE Discriminated Union
 CLOSED: [2022-03-03 Thu 21:09]
 
-#+begin_src fsharp :results value :exports code
+#+begin_src fsharp :results output silent :exports code
 type Suit = 
     | Hearts 
     | Clubs 
@@ -365,20 +365,6 @@ type Rank =
 #+end_src
 
 #+RESULTS:
-#+begin_example
-type Suit =
-  | Hearts
-  | Clubs
-  | Diamonds
-  | Spades
-type Rank =
-  | Value of int
-  | Ace
-  | King
-  | Queen
-  | Jack
-  static member GetAllRanks: unit -> Rank list
-#+end_example
 
 ** DONE Record Types
 CLOSED: [2022-03-03 Thu 21:09]
@@ -496,7 +482,6 @@ let getAsync (url:string) =
 CLOSED: [2022-03-03 Thu 21:09]
 
 #+Latex: \tiny
-
 #+begin_src fsharp :results value :exports both
 let sites = ["http://www.bing.com"; "http://www.google.com"]
 let fetch url = (url, getAsync url)
@@ -507,17 +492,18 @@ printfn "%A" ls
 
 #+RESULTS:
 #+begin_example
-[93717; 50019]
+[93717; 50058]
 val sites: string list = ["http://www.bing.com"; "http://www.google.com"]
 val fetch: url: string -> string * string
 val ps: (string * string) list =
   [("http://www.bing.com",
     "<!doctype html><html lang="de" dir="ltr"><head><meta name="th"+[93656 chars]);
    ("http://www.google.com",
-    "<!doctype html><html itemscope="" itemtype="http://schema.org"+[49958 chars])]
-val ls: int list = [93717; 50019]
+    "<!doctype html><html itemscope="" itemtype="http://schema.org"+[49997 chars])]
+val ls: int list = [93717; 50058]
 val it: unit = ()
 #+end_example
+
 
 ** DONE Folding
 CLOSED: [2022-03-03 Thu 21:09]
