@@ -1,0 +1,413 @@
+% Created 2022-04-07 Thu 11:22
+% Intended LaTeX compiler: pdflatex
+\documentclass[t]{beamer}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{graphicx}
+\usepackage{longtable}
+\usepackage{wrapfig}
+\usepackage{rotating}
+\usepackage[normalem]{ulem}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{capt-of}
+\usepackage{hyperref}
+\mode<beamer>{\usetheme{Amsterdam}}
+\mode<beamer>{\usecolortheme{rose}}
+\usepackage{fontspec}
+\usepackage{polyglossia}
+\setmainlanguage[babelshorthands=true]{german}
+\usepackage{hyperref}
+\usepackage{color}
+\usepackage{xcolor}
+\usepackage[misc]{ifsym}
+\definecolor{darkblue}{rgb}{0,0,.5}
+\definecolor{darkgreen}{rgb}{0,.5,0}
+\definecolor{islamicgreen}{rgb}{0.0, 0.56, 0.0}
+\definecolor{darkred}{rgb}{0.5,0,0}
+\definecolor{mintedbg}{rgb}{0.95,0.95,0.95}
+\definecolor{arsenic}{rgb}{0.23, 0.27, 0.29}
+\definecolor{prussianblue}{rgb}{0.0, 0.19, 0.33}
+\definecolor{coolblack}{rgb}{0.0, 0.18, 0.39}
+\hypersetup{colorlinks=true, breaklinks=true, anchorcolor=blue,linkcolor=white, citecolor=islamicgreen, filecolor=darkred,  urlcolor=darkblue}
+\usepackage{booktabs}
+\usepackage{pgf}
+\usepackage{minted}
+\RequirePackage{fancyvrb}
+\DefineVerbatimEnvironment{verbatim}{Verbatim}{fontsize=\scriptsize}
+\usetheme{default}
+\author{Göran Kirchner\thanks{e\_kirchnerg@doz.hwr-berlin.de}}
+\date{2022-04-08}
+\title{Funktionale Programmierung in F\# (3)}
+\subtitle{Grundlagen \& Funktionales Design}
+\hypersetup{
+ pdfauthor={Göran Kirchner},
+ pdftitle={Funktionale Programmierung in F\# (3)},
+ pdfkeywords={},
+ pdfsubject={},
+ pdfcreator={Emacs 27.2 (Org mode 9.5.2)}, 
+ pdflang={English}}
+\begin{document}
+
+\maketitle
+
+\section{Ziel }
+\label{sec:orga24e0f7}
+
+\begin{frame}[label={sec:orgb00a92c}]{Programm}
+\begin{itemize}
+\item Vertiefung Railway-Oriented Programming
+\item Prinzipien des funktionalen Designs
+\item Refactoring (Übung)
+\end{itemize}
+\end{frame}
+
+\section{Railway-Oriented Programming (Wdh.) }
+\label{sec:org884c213}
+
+\begin{frame}[label={sec:org3a4f635},fragile]{Übung 1}
+ \begin{itemize}
+\item Implementiere einen Workflow (\texttt{validateInput}).
+\end{itemize}
+
+\begin{minted}[bgcolor=mintedbg,frame=none,framesep=0pt,mathescape=true,fontsize=\scriptsize,breaklines=true,linenos=false,numbersep=5pt,gobble=0]{fsharp}
+type Input = {Name : string; Email : string }
+let checkNameNotBlank input =
+  if input.Name = "" then
+     Error "Name must not be blank"
+  else Ok input
+let checkName50 input =
+  if input.Name.Length > 50 then
+     Error "Name must not be longer than 50 chars"
+  else Ok input
+let checkEmailNotBlank input =
+  if input.Email = "" then
+     Error "Email must not be blank"
+  else Ok input
+\end{minted}
+
+\begin{verbatim}
+type Input =
+  {
+    Name: string
+    Email: string
+  }
+val checkNameNotBlank: input: Input -> Result<Input,string>
+val checkName50: input: Input -> Result<Input,string>
+val checkEmailNotBlank: input: Input -> Result<Input,string>
+\end{verbatim}
+\end{frame}
+
+\begin{frame}[label={sec:orgd1da6cc},fragile]{Übung 1 (Lösung)}
+ \begin{minted}[bgcolor=mintedbg,frame=none,framesep=0pt,mathescape=true,fontsize=\scriptsize,breaklines=true,linenos=false,numbersep=5pt,gobble=0]{fsharp}
+let validateInput input =
+    input
+    |> checkNameNotBlank
+    |> Result.bind checkName50
+    |> Result.bind checkEmailNotBlank
+
+let goodInput = {Name="Max"; Email="x@example.com"}
+let blankName = {Name=""; Email="x@example.com"}
+let blankEmail = {Name="Nora"; Email=""}
+[validateInput goodInput; validateInput blankName; validateInput blankEmail]
+\end{minted}
+
+\begin{verbatim}
+val validateInput: input: Input -> Result<Input,string>
+val goodInput: Input = { Name = "Max"
+                         Email = "x@example.com" }
+val blankName: Input = { Name = ""
+                         Email = "x@example.com" }
+val blankEmail: Input = { Name = "Nora"
+                          Email = "" }
+val it: Result<Input,string> list =
+  [Ok { Name = "Max"
+        Email = "x@example.com" }; Error "Name must not be blank";
+   Error "Email must not be blank"]
+\end{verbatim}
+\end{frame}
+
+\begin{frame}[label={sec:org550180a},fragile]{Übung 2}
+ \begin{itemize}
+\item Definiere einen \emph{Custom Error Type}. Benutze diesen in den Validierungen.
+\item Übersetze die Fehlermeldungen (EN, FR, DE?).
+\end{itemize}
+
+\begin{minted}[bgcolor=mintedbg,frame=none,framesep=0pt,mathescape=true,fontsize=\scriptsize,breaklines=true,linenos=false,numbersep=5pt,gobble=0]{fsharp}
+type ErrorMessage =
+  | ??   // name not blank
+  | ?? of int  // name not longer than
+  | ??   // email not longer than
+let translateError_EN err =
+  match err with
+  | ?? -> "Name must not be blank"
+  | ?? i -> sprintf "Name must not be longer than %i chars" i
+  | ?? -> "Email must not be blank"
+  | SmtpServerError msg -> sprintf "SmtpServerError [%s]" msg
+\end{minted}
+\end{frame}
+
+\begin{frame}[label={sec:orgd86303b},fragile]{Übung 2 (Lösung)}
+ \begin{minted}[bgcolor=mintedbg,frame=none,framesep=0pt,mathescape=true,fontsize=\scriptsize,breaklines=true,linenos=false,numbersep=5pt,gobble=0]{fsharp}
+type ErrorMessage =
+    | NameMustNotBeBlank
+    | NameMustNotBeLongerThan of int
+    | EmailMustNotBeBlank
+    | SmtpServerError of string
+let translateError_FR err =
+    match err with
+    | NameMustNotBeBlank -> "Nom ne doit pas être vide"
+    | NameMustNotBeLongerThan i -> sprintf "Nom ne doit pas être plus long que %i caractères" i
+    | EmailMustNotBeBlank -> "Email doit pas être vide"
+    | SmtpServerError msg -> sprintf "SmtpServerError [%s]" msg
+\end{minted}
+\end{frame}
+
+\section{Prinzipien des Funktionalen Designs }
+\label{sec:orgdeacdc7}
+\begin{frame}[label={sec:orgf536af6}]{Funktionales Design}
+\(\leadsto\) \href{./3.1 Functional Design Patterns.pdf}{Functional Design Patterns}
+\end{frame}
+
+\begin{frame}[label={sec:orgcb5b294}]{Prinzipien (1)}
+\begin{itemize}
+\item Funktionen sind Daten!
+\item überall Verkettung (Composition)
+\item überall Funktionen
+\item Typen sind keine Klassen
+\item Typen kann man ebenfalls verknüpfen (algebraische Datentypen)
+\item Typsignaturen lügen nicht!
+\item statische Typen zur Modellierung der Domäne (später mehr;)
+\end{itemize}
+\end{frame}
+
+\begin{frame}[label={sec:org43f3a35}]{Prinzipien (2)}
+\begin{itemize}
+\item Parametrisiere alles!
+\item Typsignaturen sind "Interfaces"
+\item Partielle Anwendung ist "Dependency Injection"
+\item Monaden entsprechen dem "Chaining of Continuations"
+\begin{itemize}
+\item bind für Options
+\item bind für Fehler
+\item bind für Tasks
+\end{itemize}
+\item "map" - Funktionen
+\begin{itemize}
+\item Nutze "map" - Funktion von generische Typen!
+\item wenn man einen generischen Typ definiert, dann auch eine "map" - Funktion
+\end{itemize}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[label={sec:org7ebf968}]{Übung 3}
+\begin{itemize}
+\item Typsignaturen
+\item Funktionen sind Daten
+\end{itemize}
+\end{frame}
+
+\begin{frame}[label={sec:org5e27385},fragile]{Übung 4 (Think of a Number)}
+ \begin{minted}[bgcolor=mintedbg,frame=none,framesep=0pt,mathescape=true,fontsize=\scriptsize,breaklines=true,linenos=false,numbersep=5pt,gobble=0]{fsharp}
+let thinkOfANumber numberYouThoughtOf =
+    let addOne x = x + 1
+    let squareIt x = ??
+    let subtractOne x = ??
+    let divideByTheNumberYouFirstThoughtOf x = ??
+    let subtractTheNumberYouFirstThoughtOf x = ??
+
+    // define these functions
+    // then combine them using piping
+
+    numberYouThoughtOf
+    |> ??
+    |> ??
+    |> ??
+\end{minted}
+\end{frame}
+
+\begin{frame}[label={sec:org5af5f2d},fragile]{Übung 4 (Lösung)}
+ \begin{minted}[bgcolor=mintedbg,frame=none,framesep=0pt,mathescape=true,fontsize=\scriptsize,breaklines=true,linenos=false,numbersep=5pt,gobble=0]{fsharp}
+let thinkOfANumber numberYouThoughtOf =
+    let addOne x = x + 1
+    let squareIt x = x * x
+    let subtractOne x = x - 1
+    let divideByTheNumberYouFirstThoughtOf x = x / numberYouThoughtOf
+    let subtractTheNumberYouFirstThoughtOf x = x - numberYouThoughtOf
+    numberYouThoughtOf
+    |> addOne
+    |> squareIt
+    |> subtractOne
+    |> divideByTheNumberYouFirstThoughtOf
+    |> subtractTheNumberYouFirstThoughtOf
+thinkOfANumber 42
+\end{minted}
+
+\begin{verbatim}
+val thinkOfANumber: numberYouThoughtOf: int -> int
+val it: int = 2
+\end{verbatim}
+\end{frame}
+
+\begin{frame}[label={sec:org5aefc41},fragile]{Übung 5 (Decorator)}
+ \begin{itemize}
+\item Implementiere das \href{https://de.wikipedia.org/wiki/Decorator}{Decorator-Emtwurfsmuster} für \texttt{add1}.
+\end{itemize}
+\end{frame}
+
+\begin{frame}[label={sec:orgf8a9d2e}]{Pause}
+\begin{block}{}
+If we’d asked the customers what they wanted, they would have said “faster horses”.
+
+\null\hfill -- Henry Ford
+\end{block}
+\end{frame}
+
+\section{Refactoring }
+\label{sec:org2e09a26}
+\begin{frame}[label={sec:org917ad1c},fragile]{Tree Building (Übung)}
+ \begin{minted}[bgcolor=mintedbg,frame=none,framesep=0pt,mathescape=true,fontsize=\scriptsize,breaklines=true,linenos=false,numbersep=5pt,gobble=0]{shell}
+exercism download --exercise=tree-building --track=fsharp
+\end{minted}
+\end{frame}
+
+\begin{frame}[label={sec:orgd78e686},fragile]{Tree Building (Imperativ)}
+ \begin{minted}[bgcolor=mintedbg,frame=none,framesep=0pt,mathescape=true,fontsize=\scriptsize,breaklines=true,linenos=false,numbersep=5pt,gobble=0]{fsharp}
+let buildTree records =
+    let records' = List.sortBy (fun x -> x.RecordId) records
+    if List.isEmpty records' then failwith "Empty input"
+    else
+        let root = records'.[0]
+        if (root.ParentId = 0 |> not) then
+            failwith "Root node is invalid"
+        else
+            if (root.RecordId = 0 |> not) then failwith "Root node is invalid"
+            else
+                let mutable prev = -1
+                let mutable leafs = []
+                for r in records' do
+                    if (r.RecordId <> 0 && (r.ParentId > r.RecordId || r.ParentId = r.RecordId)) then
+                        failwith "Nodes with invalid parents"
+                    else
+                        if r.RecordId <> prev + 1 then
+                            failwith "Non-continuous list"
+                        else
+                            prev <- r.RecordId
+                            if (r.RecordId = 0) then
+                                leafs <- leafs @ [(-1, r.RecordId)]
+                            else
+                                leafs <- leafs @ [(r.ParentId, r.RecordId)]
+\end{minted}
+\end{frame}
+
+\begin{frame}[label={sec:orga0b4e86},fragile]{Tree Building (Funktional)}
+ \begin{minted}[bgcolor=mintedbg,frame=none,framesep=0pt,mathescape=true,fontsize=\scriptsize,breaklines=true,linenos=false,numbersep=5pt,gobble=0]{fsharp}
+let buildTree records = 
+    records
+    |> List.sortBy (fun r -> r.RecordId)
+    |> validate
+    |> List.tail
+    |> List.groupBy (fun r -> r.ParentId)
+    |> Map.ofList
+    |> makeTree 0
+
+let rec makeTree id map =
+    match map |> Map.tryFind id with
+    | None -> Leaf id
+    | Some list -> Branch (id, 
+        list |> List.map (fun r -> makeTree r.RecordId map))
+\end{minted}
+\end{frame}
+
+\begin{frame}[label={sec:org4876361},fragile]{Tree Building (Error Handling)}
+ \begin{minted}[bgcolor=mintedbg,frame=none,framesep=0pt,mathescape=true,fontsize=\scriptsize,breaklines=true,linenos=false,numbersep=5pt,gobble=0]{fsharp}
+let validate records =
+    match records with
+    | [] -> failwith "Input must be non-empty"
+    | x :: _ when x.RecordId <> 0 -> 
+        failwith "Root must have id 0"
+    | x :: _ when x.ParentId <> 0 -> 
+        failwith "Root node must have parent id 0"
+    | _ :: xs when xs |> List.exists (fun r -> r.RecordId < r.ParentId) -> 
+        failwith "ParentId should be less than RecordId"
+    | _ :: xs when xs |> List.exists (fun r -> r.RecordId = r.ParentId) -> 
+        failwith "ParentId cannot be the RecordId except for the root node."
+    | rs when (rs |> List.map (fun r -> r.RecordId) |> List.max) > (List.length rs - 1) -> 
+        failwith "Ids must be continuous"
+    | _ -> records
+\end{minted}
+\end{frame}
+
+\begin{frame}[label={sec:orga0da274},fragile]{Tree Building (Benchmarking)}
+ \begin{itemize}
+\item \href{https://github.com/dotnet/BenchmarkDotNet}{BenchmarkDotNet}
+\end{itemize}
+
+\begin{minted}[bgcolor=mintedbg,frame=none,framesep=0pt,mathescape=true,fontsize=\scriptsize,breaklines=true,linenos=false,numbersep=5pt,gobble=0]{shell}
+dotnet run -c release
+\end{minted}
+
+\begin{minted}[bgcolor=mintedbg,frame=none,framesep=0pt,mathescape=true,fontsize=\scriptsize,breaklines=true,linenos=false,numbersep=5pt,gobble=0]{shell}
+sed -n 447,460p $benchmarks
+\end{minted}
+
+\tiny
+// * Summary *
+
+BenchmarkDotNet=v0.12.1, OS=macOS 12.3 (21E230) [Darwin 21.4.0]
+Intel Core i7-7920HQ CPU 3.10GHz (Kaby Lake), 1 CPU, 8 logical and 4 physical cores
+.NET Core SDK=6.0.200
+  [Host]     : .NET Core 6.0.2 (CoreCLR 6.0.222.6406, CoreFX 6.0.222.6406), X64 RyuJIT DEBUG
+  DefaultJob : .NET Core 6.0.2 (CoreCLR 6.0.222.6406, CoreFX 6.0.222.6406), X64 RyuJIT
+
+
+\begin{center}
+\begin{tabular}{lllllrrrlll}
+Method & Mean & Error & StdDev & Median & Ratio & RatioSD & Gen 0 & Gen 1 & Gen 2 & Allocated\\
+\hline
+Baseline & 8.058 μs & 0.1562 μs & 0.1535 μs & 8.069 μs & 1.00 & 0.00 & 3.3569 & - & - & 13.75 KB\\
+Mine & 5.172 μs & 0.2075 μs & 0.5953 μs & 5.006 μs & 0.57 & 0.02 & 1.8768 & - & - & 7.68 KB\\
+\end{tabular}
+\end{center}
+\end{frame}
+
+
+\section{Ende }
+\label{sec:orge3bd3d3}
+\begin{frame}[label={sec:org0e30a04}]{Zusammenfassung}
+\begin{itemize}
+\item funktionaler Umgang mit Fehlern (ROP)
+\item funktionales Design
+\item funktionales Refactoring
+\end{itemize}
+\end{frame}
+
+\begin{frame}[label={sec:org29f2505}]{Links}
+\begin{itemize}
+\item \href{https://fsharp.org/}{fsharp.org}
+\item \href{https://docs.microsoft.com/de-de/dotnet/fsharp/}{docs.microsoft.com/../dotnet/fsharp}
+\item \href{https://sergeytihon.com/}{F\# weekly}
+\item \href{https://fsharpforfunandprofit.com/}{fsharpforfunandprofit.com}
+\item \href{https://github.com/fsprojects/awesome-fsharp}{github.com/../awesome-fsharp}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[label={sec:org7a628ce}]{Hausaufgabe (Erinnerung)}
+\begin{itemize}
+\item exercism.io (E-Mail bis 22.04)
+\begin{itemize}
+\item[{$\square$}] Queen Attack
+\item[{$\square$}] Raindrops
+\item[{$\square$}] Gigasecond
+\item[{$\square$}] Bank Account
+\item[{$\square$}] Accumulate
+\item[{$\square$}] Space Age
+\end{itemize}
+
+\item exercism.io (E-Mail bis 29.04)
+\begin{itemize}
+\item[{$\square$}] Poker (Programmieraufgabe)
+\end{itemize}
+\end{itemize}
+\end{frame}
+\end{document}
